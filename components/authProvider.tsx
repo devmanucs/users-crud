@@ -40,7 +40,7 @@ useEffect(() => {
   const login = async (email: string, password: string) => {
     // json-server: filtra por email e senha
     const res = await api.get<Account[]>("/accounts", { params: { email, password } });
-    if (res.data.length === 0) throw new Error("Credenciais inválidas");
+    if (res.data.length === 0) throw new Error("Credenciais inválidas. Por favor verifique seus dados ou registre-se.");
     const account = res.data[0];
     localStorage.setItem("authUser", JSON.stringify(account));
     setUser(account);

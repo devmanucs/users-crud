@@ -22,7 +22,7 @@ export default function Page() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || "Erro ao fazer login");
-      console.error("Erro no login:", err);
+      console.warn("Erro no login:", err);
     }
   }
 
