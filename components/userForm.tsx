@@ -1,59 +1,119 @@
 "use client";
-import React, { useState} from "react";
+
+import React, { useState, useEffect } from "react";
 import { api } from "@/lib/api";
 import type { UserEntry } from "@/types";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
-export const UserForm: React.FC<{
+interface UserFormProps {
   onSaved: (user: UserEntry) => void;
   editing?: UserEntry | null;
   onCancel?: () => void;
-}> = ({ onSaved, editing, onCancel }) => {
+}
 
-  const [form, setForm] = useState({
-    name: editing?.name ?? "",
-    githubUsername: editing?.githubUsername ?? "",
-  });
+export function UserForm({ onSaved, editing, onCancel }: UserFormProps) {
+  const [name, setName] = useState("");
+  const [githubUsername, setGithubUsername] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (editing) {
+      setName(editing.name);
+      setGithubUsername(editing.githubUsername);
+    } else {
+      setName("");
+      setGithubUsername("");
+    }
+  }, [editing]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    const payload: UserEntry = {
-      name: form.name,
-      githubUsername: form.githubUsername,
-    };
+    if (!name.trim() || !githubUsername.trim()) {
+      setError("Preencha todos os campos!");
+      return;
+    }
 
-    if (editing?.id) {
-      const res = await api.put(`/users/${editing.id}`, payload);
+    setIsLoading(true);
+
+    const payload = { name, githubUsername };
+
+    try {
+      let res;
+      if (editing?.id) {
+        res = await api.put(`/users/${editing.id}`, payload);
+      } else {
+        res = await api.post("/users", payload);
+      }
       onSaved(res.data);
-    } else {
-      const res = await api.post("/users", payload);
-      onSaved(res.data);
+      
+      if (!editing) {
+        setName("");
+        setGithubUsername("");
+      }
+    } catch (err) {
+      console.error("Erro ao salvar:", err);
+      setError("Erro ao salvar usuário.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        value={form.name}
-        onChange={(e) =>
-          setForm((prev) => ({ ...prev, name: e.target.value }))
-        }
-      />
+    <form
+      onSubmit={handleSubmit}
+      className="bg-muted/50 border p-4 rounded-xl space-y-4"
+    >
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="flex-1 space-y-2">
+          <Label htmlFor="name" className="sr-only">Nome</Label>
+          <Input
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nome do usuário"
+            disabled={isLoading}
+            className="bg-background"
+          />
+        </div>
+        
+        <div className="flex-1 space-y-2">
+          <Label htmlFor="username" className="sr-only">Github Username</Label>
+          <Input
+            id="username"
+            value={githubUsername}
+            onChange={(e) => setGithubUsername(e.target.value)}
+            placeholder="@github_username"
+            disabled={isLoading}
+            className="bg-background"
+          />
+        </div>
+      </div>
 
-      <input
-        value={form.githubUsername}
-        onChange={(e) =>
-          setForm((prev) => ({ ...prev, githubUsername: e.target.value }))
-        }
-      />
-
-      <button type="submit">
-        {editing ? "Salvar alterações" : "Cadastrar"}
-      </button>
-
-      {editing && onCancel && (
-        <button type="button" onClick={onCancel}>Cancelar</button>
+      {error && (
+        <p className="text-sm text-destructive font-medium">{error}</p>
       )}
+
+      <div className="flex gap-2 justify-center">
+        {editing && onCancel && (
+          <Button 
+            type="button"
+            variant="ghost"
+            onClick={onCancel}
+            disabled={isLoading}
+          >
+            Cancelar
+          </Button>
+        )}
+        
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Salvando..." : editing ? "Salvar Alterações" : "Cadastrar Usuário"}
+        </Button>
+      </div>
     </form>
   );
-};
+}
