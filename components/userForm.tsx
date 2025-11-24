@@ -98,20 +98,22 @@ export function UserForm({ onSaved, editing, onCancel }: UserFormProps) {
         <p className="text-sm text-destructive font-medium">{error}</p>
       )}
 
-      <div className="flex gap-2 justify-center">
+      {/* Botões ocupando largura total */}
+      <div className="flex flex-col-reverse sm:flex-row gap-2">
         {editing && onCancel && (
           <Button 
-            type="button"
-            variant="ghost"
+            type="button" 
+            variant="outline" 
             onClick={onCancel}
             disabled={isLoading}
+            className="w-full"
           >
             Cancelar
           </Button>
         )}
         
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Salvando..." : editing ? "Salvar Alterações" : "Cadastrar Usuário"}
+        <Button type="submit" disabled={isLoading} className="w-full">
+          {isLoading ? "Salvando..." : editing ? "Salvar Alterações" : "Cadastrar"}
         </Button>
       </div>
     </form>
